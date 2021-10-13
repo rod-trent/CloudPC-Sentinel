@@ -28,16 +28,16 @@ SigninLogs
 | extend OS = DeviceDetail.operatingSystem, Browser = DeviceDetail.browser
 | extend StatusCode = tostring(Status.errorCode), StatusDetails = tostring(Status.additionalDetails)
 | extend State = tostring(LocationDetails.state), City = tostring(LocationDetails.city)
+| extend displayName_ = tostring(DeviceDetail.displayName)
 | where AppDisplayName == "Windows Sign In"
 // Split out failure versus non-failure types
 | extend FailureOrSuccess = iff(ResultType in ("0", "50125", "50140", "70043", "70044"), "Success", "Failure")
-| summarize StartTimeUtc = min(TimeGenerated), EndTimeUtc = max(TimeGenerated), IPAddress = makeset(IPAddress), makeset(OS), makeset(Browser), makeset(City), 
-makeset(ResultType), FailureCount = countif(FailureOrSuccess=="Failure"), SuccessCount = countif(FailureOrSuccess=="Success") 
+| summarize StartTimeUtc = min(TimeGenerated), EndTimeUtc = max(TimeGenerated), IPAddress = makeset(IPAddress), makeset(OS), makeset(Browser), makeset(City), makeset(ResultType), HOST = makeset(displayName_), FailureCount = countif(FailureOrSuccess=="Failure"), SuccessCount = countif(FailureOrSuccess=="Success") 
 by bin(TimeGenerated, authenticationWindow), UserDisplayName, UserPrincipalName, AppDisplayName
 | where FailureCount >= failureCountThreshold and SuccessCount >= successCountThreshold
 | mvexpand IPAddress
 | extend IPAddress = tostring(IPAddress)
-| extend timestamp = StartTimeUtc, AccountCustomEntity = UserPrincipalName, IPCustomEntity = IPAddress
+| extend timestamp = StartTimeUtc, AccountCustomEntity = UserPrincipalName, IPCustomEntity = IPAddress, HostCustomEntity = HOST
 entityMappings:
   - entityType: Account
     fieldMappings:
@@ -47,5 +47,9 @@ entityMappings:
     fieldMappings:
       - identifier: Address
         columnName: IPCustomEntity
+  - entityType: Device
+    fieldMappings:
+      - identifier: HOST
+        columnName: HostCustomEntity        
 version: 1.0.0
 kind: scheduled
