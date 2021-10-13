@@ -47,9 +47,9 @@ entityMappings:
     fieldMappings:
       - identifier: Address
         columnName: IPCustomEntity
-  - entityType: Device
+  - entityType: Host
     fieldMappings:
       - identifier: HOST
-        columnName: HostCustomEntity        
+        columnName: HostCustomEntity       
 version: 1.0.0
 kind: scheduled
